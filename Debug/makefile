@@ -44,7 +44,7 @@ all: uart_test.axf
 uart_test.axf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU C++ Linker'
-	arm-none-eabi-c++ -nostdlib -L"D:\1_Project\NPCXpresso\lpc_board_nxp_lpcxpresso_1549\Debug" -L"D:\1_Project\NPCXpresso\lpc_chip_15xx\Debug" -L"D:\1_Project\NPCXpresso\lib_itm\Debug" -L"D:\1_Project\NPCXpresso\DigitalIO_lib\Debug" -Xlinker -Map="uart_test.map" -Xlinker --gc-sections -mcpu=cortex-m3 -mthumb -T "uart_test_Debug.ld" -o "uart_test.axf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-c++ -nostdlib -L"D:\1_Project\NPCXpresso\lpc_board_nxp_lpcxpresso_1549\Debug" -L"D:\1_Project\NPCXpresso\lpc_chip_15xx\Debug" -L"D:\1_Project\NPCXpresso\lib_itm\Debug" -L"D:\1_Project\NPCXpresso\DigitalIO_lib\Debug" -L"D:\1_Project\NPCXpresso\lib_LCD\Debug" -Xlinker -Map="uart_test.map" -Xlinker --gc-sections -mcpu=cortex-m3 -mthumb -T "uart_test_Debug.ld" -o "uart_test.axf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build

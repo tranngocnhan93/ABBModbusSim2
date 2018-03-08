@@ -1,4 +1,5 @@
-src/project.o src/project.d: ../src/project.cpp \
+src/LiquidCrystal.o src/LiquidCrystal.d: ../src/LiquidCrystal.cpp \
+ ../src/../../uart_test/src/LiquidCrystal.h \
  D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/chip.h \
  D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/lpc_types.h \
  D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/sys_config.h \
@@ -46,13 +47,10 @@ src/project.o src/project.d: ../src/project.cpp \
  D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/i2cm_15xx.h \
  D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/i2c_common_15xx.h \
  D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/i2cs_15xx.h \
- D:\1_Project\NPCXpresso\lpc_board_nxp_lpcxpresso_1549\inc/board.h \
- D:\1_Project\NPCXpresso\lpc_board_nxp_lpcxpresso_1549\inc/board_api.h \
- D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/lpc_types.h \
- ../src/ModbusMaster.h ../src/word.h ../src/SerialPort.h \
- D:\1_Project\NPCXpresso\lib_itm\inc/itm_class.h ../src/I2C.h \
  D:\1_Project\NPCXpresso\DigitalIO_lib\inc/DigitalIoPin.h \
- ../src/LiquidCrystal.h
+ D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/ritimer_15xx.h
+
+../src/../../uart_test/src/LiquidCrystal.h:
 
 D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/chip.h:
 
@@ -148,22 +146,6 @@ D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/i2c_common_15xx.h:
 
 D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/i2cs_15xx.h:
 
-D:\1_Project\NPCXpresso\lpc_board_nxp_lpcxpresso_1549\inc/board.h:
-
-D:\1_Project\NPCXpresso\lpc_board_nxp_lpcxpresso_1549\inc/board_api.h:
-
-D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/lpc_types.h:
-
-../src/ModbusMaster.h:
-
-../src/word.h:
-
-../src/SerialPort.h:
-
-D:\1_Project\NPCXpresso\lib_itm\inc/itm_class.h:
-
-../src/I2C.h:
-
 D:\1_Project\NPCXpresso\DigitalIO_lib\inc/DigitalIoPin.h:
 
-../src/LiquidCrystal.h:
+D:\1_Project\NPCXpresso\lpc_chip_15xx\inc/ritimer_15xx.h:
