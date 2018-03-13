@@ -48,7 +48,7 @@ C_DEPS += \
 src/%.o: ../src/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: MCU C++ Compiler'
-	arm-none-eabi-c++ -std=c++11 -D__NEWLIB__ -DDEBUG -D__CODE_RED -DCORE_M3 -D__USE_LPCOPEN -DCPP_USE_HEAP -D__LPC15XX__ -I"D:\1_Project\NPCXpresso\lpc_board_nxp_lpcxpresso_1549\inc" -I"D:\1_Project\NPCXpresso\lpc_chip_15xx\inc" -I"D:\1_Project\NPCXpresso\lib_itm\inc" -I"D:\1_Project\NPCXpresso\DigitalIO_lib\inc" -I"D:\1_Project\NPCXpresso\lib_LCD\inc" -O0 -g3 -Wall -c -fmessage-length=0 -fno-builtin -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -mcpu=cortex-m3 -mthumb -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	arm-none-eabi-c++ -std=c++11 -D__NEWLIB__ -DDEBUG -D__CODE_RED -DCORE_M3 -D__USE_LPCOPEN -DCPP_USE_HEAP -D__LPC15XX__ -I"D:\1_Project\NPCXpresso\lpc_board_nxp_lpcxpresso_1549\inc" -I"D:\1_Project\NPCXpresso\uart_test\src\kalman" -I"D:\1_Project\NPCXpresso\lpc_chip_15xx\inc" -I"D:\1_Project\NPCXpresso\lib_itm\inc" -I"D:\1_Project\NPCXpresso\DigitalIO_lib\inc" -I"D:\1_Project\NPCXpresso\lib_LCD\inc" -O0 -g3 -Wall -c -fmessage-length=0 -fno-builtin -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -mcpu=cortex-m3 -mthumb -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
