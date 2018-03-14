@@ -22,7 +22,7 @@
 #include <vector>
 #include <algorithm>
 #define	BUTTON_STEP 5
-#define FILTER_LEN	11
+#define FILTER_LEN	7
 static volatile int counter;
 static volatile uint32_t systicks;
 
@@ -74,7 +74,7 @@ bool setFrequency(ModbusMaster& node, uint16_t freq) {
 	uint8_t result;
 	int ctr;
 	bool atSetpoint;
-	const int delay = 500;
+	const int delay = 1;
 
 	node.writeSingleRegister(1, freq); // set motor frequency
 
@@ -181,32 +181,32 @@ uint8_t filter(uint8_t noisy) {
 //		}
 //		mean = sum/FILTER_LEN;
 		std::sort(filter_vec.begin(), filter_vec.end());
-		it = filter_vec.begin()+5;
+		it = filter_vec.begin()+3;
 	}
 
 	return *it;
 }
 
-uint8_t pid(uint8_t desired_pressure, uint8_t actual_pressure, uint8_t delta_time) {
+uint8_t pid(SWOITMclass itm, float k, uint8_t desired_pressure, uint8_t actual_pressure, uint8_t delta_time) {
 	signed char error;
 	static signed char last_error;
 	float pTerm, dTerm, speed, bias_speed;
-	float kp = 0.425;
-	float ki = 0.013;
-	float kd = 50.0;
+	float kp = 1.0;	 	//0.425
+	float ki = 0.008;	 	//0.013
+//	float kd = 0.0;		//50.0
 	static float iTerm = 0;
 
 	bias_speed = ((float)desired_pressure)/127*100;
 	error = desired_pressure - actual_pressure;
 	pTerm = kp*(float)error;
 	iTerm += ki*error*delta_time;
-	dTerm = kd*(error - last_error)/delta_time;
+	dTerm = k*(error - last_error)/delta_time;
 	speed = pTerm + iTerm + dTerm + bias_speed;
 
-//	itm.print(std::to_string(k));
-//	itm.print("  ");
-//	itm.print(std::to_string(delta_time));
-//	itm.print("\n");
+	itm.print(std::to_string(k));
+	itm.print("  ");
+	itm.print(std::to_string(delta_time));
+	itm.print("\n");
 
 	if(speed > 100.0)
 		speed = 100.0;
@@ -248,11 +248,11 @@ int main(void)
 	DigitalIoPin D7(0, 7, false, false, false);
 	LiquidCrystal lcd(&RS, &EN, &D4, &D5, &D6, &D7);
 
-	uint8_t speed = 0, desired_pressure = 0, actual_pressure = 0, delta_time = 0, filtered_press = 0;
+	uint8_t speed = 0, desired_pressure = 40, actual_pressure = 0, delta_time = 0, filtered_press = 0;
 	uint32_t time1 = 0, time2 = 0;
 	std::string str;
 	bool mode = true;		//false: manual true: automatic
-//	float k = 0.013;
+	float k = 5.0;
 	while(1) {
 		while(!mode) {
 			if(button1.Read()) {
@@ -283,12 +283,12 @@ int main(void)
 		}
 		while(mode) {
 			time1 = millis();
-//			if(button4.Read()) {
-//				k += 0.001;
-//			}
-//			if(button2.Read()) {
-//				k -= 0.001;
-//			}
+			if(button4.Read()) {
+				k += 0.1;
+			}
+			if(button2.Read()) {
+				k -= 0.1;
+			}
 			if(button1.Read()) {
 				if(desired_pressure <= 120 - BUTTON_STEP)
 					desired_pressure += BUTTON_STEP;
@@ -305,7 +305,7 @@ int main(void)
 				else delta_time = time2 - time1;
 //				itm.print(delta_time);
 				filtered_press = filter(actual_pressure);
-				speed = pid(desired_pressure, filtered_press, 10);
+				speed = pid(itm, k, desired_pressure, filtered_press, delta_time);
 				setFanSpeed(node, speed);
 
 				lcd.clear();
@@ -323,7 +323,7 @@ int main(void)
 			str = std::to_string(desired_pressure);
 			Board_UARTPutSTR(str.c_str());
 			Board_UARTPutChar('\n');
-//			Sleep(200);
+			Sleep(10);
 		}
 	}
 
