@@ -22,7 +22,8 @@
 #include <vector>
 #include <algorithm>
 #define	BUTTON_STEP 5
-#define FILTER_LEN	7
+#define FILTER_LEN	9
+#define TIMEOUT 5000			//ms
 static volatile int counter;
 static volatile uint32_t systicks;
 
@@ -120,40 +121,6 @@ void setFanSpeed(ModbusMaster &node, uint8_t speed){
 	setFrequency(node, freq);
 }
 
-long kalman(long noisy) {
-	float x_est_last = 0;
-	float P_last = 0;
-	//the noise in the system
-	float Q = 9.0;//0.022;
-	float R = 9.0;//0.617;
-
-	float K;
-	float P;
-	float P_temp;
-	float x_temp_est;
-	float x_est;
-	float z_measured; //the 'noisy' value we measured
-
-	//initialize with a measurement
-	x_est_last = 0;
-
-	//do a prediction
-	x_temp_est = x_est_last;
-	P_temp = P_last + Q;
-	//calculate the Kalman gain
-	K = P_temp * (1.0/(P_temp + R));
-	//measure
-	z_measured = (float)noisy;
-	//correct
-	x_est = x_temp_est + K * (z_measured - x_temp_est); //kalman
-	P = (1- K) * P_temp;
-
-	//update our last's
-	P_last = P;
-	x_est_last = x_est;
-	return (long)x_est;
-}
-
 uint8_t filter(uint8_t noisy) {
 	static uint8_t arr[FILTER_LEN];
 	static uint8_t i = 0;
@@ -181,32 +148,32 @@ uint8_t filter(uint8_t noisy) {
 //		}
 //		mean = sum/FILTER_LEN;
 		std::sort(filter_vec.begin(), filter_vec.end());
-		it = filter_vec.begin()+3;
+		it = filter_vec.begin()+4;
 	}
 
 	return *it;
 }
 
-uint8_t pid(SWOITMclass itm, float k, uint8_t desired_pressure, uint8_t actual_pressure, uint8_t delta_time) {
+uint8_t pid(uint8_t desired_pressure, uint8_t actual_pressure, uint8_t delta_time) {
 	signed char error;
 	static signed char last_error;
 	float pTerm, dTerm, speed, bias_speed;
-	float kp = 1.0;	 	//0.425
-	float ki = 0.008;	 	//0.013
-//	float kd = 0.0;		//50.0
+	static float kp = 0.6;	 	//0.425
+	static float ki = 0.007;	 	//0.013
+	static float kd = 8.8;		//50.0
 	static float iTerm = 0;
 
 	bias_speed = ((float)desired_pressure)/127*100;
 	error = desired_pressure - actual_pressure;
 	pTerm = kp*(float)error;
 	iTerm += ki*error*delta_time;
-	dTerm = k*(error - last_error)/delta_time;
+	dTerm = kd*(error - last_error)/delta_time;
 	speed = pTerm + iTerm + dTerm + bias_speed;
 
-	itm.print(std::to_string(k));
-	itm.print("  ");
-	itm.print(std::to_string(delta_time));
-	itm.print("\n");
+//	itm.print(std::to_string(k));
+//	itm.print("  ");
+//	itm.print(std::to_string(delta_time));
+//	itm.print("\n");
 
 	if(speed > 100.0)
 		speed = 100.0;
@@ -248,52 +215,58 @@ int main(void)
 	DigitalIoPin D7(0, 7, false, false, false);
 	LiquidCrystal lcd(&RS, &EN, &D4, &D5, &D6, &D7);
 
-	uint8_t speed = 0, desired_pressure = 40, actual_pressure = 0, delta_time = 0, filtered_press = 0;
+	uint8_t man_speed = 0, speed = 0, desired_pressure = 0, actual_pressure = 0, delta_time = 0, filtered_press = 0;
 	uint32_t time1 = 0, time2 = 0;
+	uint16_t timeout = 0; 	//for timeout alert
 	std::string str;
-	bool mode = true;		//false: manual true: automatic
-	float k = 5.0;
+	bool mode = false;		//false: manual true: automatic
+//	float k = 0.7;
 	while(1) {
 		while(!mode) {
 			if(button1.Read()) {
-				if(speed <= 100 - BUTTON_STEP)
-					speed += BUTTON_STEP;
+				if(man_speed <= 100 - BUTTON_STEP)
+					man_speed += BUTTON_STEP;
 			}
 			if(button3.Read()) {
-				if(speed >= BUTTON_STEP)
-					speed -= BUTTON_STEP;
+				if(man_speed >= BUTTON_STEP)
+					man_speed -= BUTTON_STEP;
 			}
 			if(button2.Read()) {
 				mode = true;
+				timeout = 0;
 			}
-			setFanSpeed(node, speed);
+			setFanSpeed(node, man_speed);
 
 			/*	Print LCD	*/
 			lcd.clear();
 			lcd.setCursor(0, 0);
 			lcd.print("Fan Speed: ");
-			lcd.print(std::to_string(speed));
+			lcd.print(std::to_string(man_speed));
 			lcd.setCursor(0,  1);
 			lcd.print("Pressure:  ");
 			actual_pressure = i2cTest(i2c);
+			filtered_press = filter(actual_pressure);
 			if(actual_pressure >= 0)
-				lcd.print(std::to_string(actual_pressure));
+				lcd.print(std::to_string(filtered_press));
 			else lcd.print("Error");
 			Sleep(300);
 		}
 		while(mode) {
 			time1 = millis();
-			if(button4.Read()) {
-				k += 0.1;
-			}
+//			if(button4.Read()) {
+//				k += 0.02;
+//			}
 			if(button2.Read()) {
-				k -= 0.1;
+				mode = false;
+				Sleep(200);
 			}
 			if(button1.Read()) {
+				timeout = 0;
 				if(desired_pressure <= 120 - BUTTON_STEP)
 					desired_pressure += BUTTON_STEP;
 			}
 			if(button3.Read()) {
+				timeout = 0;
 				if(desired_pressure >= BUTTON_STEP)
 					desired_pressure -= BUTTON_STEP;
 			}
@@ -305,7 +278,7 @@ int main(void)
 				else delta_time = time2 - time1;
 //				itm.print(delta_time);
 				filtered_press = filter(actual_pressure);
-				speed = pid(itm, k, desired_pressure, filtered_press, delta_time);
+				speed = pid(desired_pressure, filtered_press, delta_time);
 				setFanSpeed(node, speed);
 
 				lcd.clear();
@@ -323,6 +296,16 @@ int main(void)
 			str = std::to_string(desired_pressure);
 			Board_UARTPutSTR(str.c_str());
 			Board_UARTPutChar('\n');
+			if(filtered_press >= desired_pressure-1 && filtered_press <= desired_pressure+1) {
+				timeout = 0;
+			}
+			else {
+				timeout++;
+				if(timeout >= 100) {
+					lcd.setCursor(0, 0);
+					lcd.print("Unreachable");
+				}
+			}
 			Sleep(10);
 		}
 	}
